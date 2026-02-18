@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use App\Services\Payments\DTOs\PaymentDataDTO;
+use App\Services\Payments\PaymentService;
 
 class PaymentController extends Controller
 {
@@ -28,7 +30,31 @@ class PaymentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+            'amount' => 'required|numeric|min:1',
+            'currency' => 'required|string',
+            'method' => 'required|string',
+            'status' => 'required|string'
+        ]);
+
+        $PaystrategyClass = PaymentService::METHODS[$validated['method']]
+        ?? throw new \Exception("El metodo de pago no es valido");
+
+        $strategy = new $PaystrategyClass();
+
+        $paymentData = new PaymentDataDTO(
+            $validated['user_id'],
+            $validated['amount'],
+            $validated['currency'],
+            $validated['status']
+        );
+
+        $response = $strategy->processPayment($paymentData);
+
+        return response()->json($response);
+        
     }
 
     /**

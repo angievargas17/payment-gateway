@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Config\PaymentConfig;
+use App\Services\Payments\Contracts\PaymentStrategy;
 
 class PaymentServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,15 @@ class PaymentServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(PaymentConfig::class, fn () =>
+            PaymentConfig::getInstance()
+        );
+
+        $this->app->bind(
+            PaymentStrategy::class,
+        );
+
+
     }
 
     /**
