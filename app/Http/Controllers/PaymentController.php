@@ -26,34 +26,42 @@ class PaymentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Metodo que simula el procesamiento de un pago conectado a un servicio
      */
     public function store(Request $request)
     {
-        
-        $validated = $request->validate([
-            'user_id' => 'required|integer',
-            'amount' => 'required|numeric|min:1',
-            'currency' => 'required|string',
-            'method' => 'required|string',
-            'status' => 'required|string'
-        ]);
+        try {
+            /**Validacion de tipos de datos y campos requeridos */
+            $validated = $request->validate([
+                'user_id' => 'required|integer',
+                'amount' => 'required|numeric|min:1',
+                'currency' => 'required|string',
+                'method' => 'required|string',
+                'status' => 'required|string'
+            ]);
 
-        $PaystrategyClass = PaymentService::METHODS[$validated['method']]
-        ?? throw new \Exception("El metodo de pago no es valido");
+            $PaystrategyClass = PaymentService::METHODS[$validated['method']]
+            ?? throw new \Exception("El metodo de pago no es valido");
 
-        $strategy = new $PaystrategyClass();
+            $strategy = new $PaystrategyClass();
 
-        $paymentData = new PaymentDataDTO(
-            $validated['user_id'],
-            $validated['amount'],
-            $validated['currency'],
-            $validated['status']
-        );
+            $paymentData = new PaymentDataDTO(
+                $validated['user_id'],
+                $validated['amount'],
+                $validated['currency'],
+                $validated['status']
+            );
 
-        $response = $strategy->processPayment($paymentData);
+            $response = $strategy->processPayment($paymentData);
 
-        return response()->json($response);
+            return response()->json($response);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage()
+            ]);
+        }
+       
         
     }
 

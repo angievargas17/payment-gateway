@@ -8,6 +8,7 @@ use App\Services\Payments\Contracts\PaymentStrategy;
 
 class PaymentServiceProvider extends ServiceProvider
 {
+    // Nota en los providers es el unico lugar donde se puede utilizar el new 
     /**
      * Register services.
      */

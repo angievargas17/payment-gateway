@@ -3,23 +3,16 @@
 namespace App\Services\Payments\Strategies;
 
 use App\Services\Payments\Contracts\PaymentStrategy;
-use App\Config\PaymentConfig;
+
 use App\Services\Payments\DTOs\PaymentDataDTO;
-use App\Services\Payments\DTOs\PaymentResultDTO;    
+use App\Services\Payments\DTOs\PaymentResultDTO;  
+use App\Services\Payments\Clients\PaypalApiClient;
+ 
 
 class PaypalPayment implements PaymentStrategy
 {
     public function processPayment(PaymentDataDTO $data) : PaymentResultDTO
     {
-
-
-        $config = PaymentConfig::getInstance();
-
-        // supuesta configuración para PayPal 
-        $url = $config->providers['paypal']['url'];
-        $clientId = $config->providers['paypal']['client_id'];
-        $clientSecret = $config->providers['paypal']['client_secret'];  
-        $timeout = $config->timeout;
 
         //Simulamos supuestos estados de respuesta de PayPal
         if($data->status != 'OK'){
@@ -29,13 +22,26 @@ class PaypalPayment implements PaymentStrategy
                 ['message' => 'Monto inválido para PayPal']
             );
         }
+       
+        $client = new PaypalApiClient();
+        $result = $client->createPayment($data);
 
-        $transactionId = 'PAYPAL_' . uniqid();
-
+        if(!$result || $result['status'] != 'COMPLETED'){
+            return new PaymentResultDTO(
+                false,
+                "ERROR_" . uniqid(),
+                ['message' => 'Error al procesar el pago con PayPal']
+            );
+        }
+       
+        
         return new PaymentResultDTO(
             true,
-            $transactionId,
-            ['message' => 'Pago procesado correctamente con PayPal']
+            $result['id'],
+            [
+                'message' => 'Pago procesado correctamente con PayPal',
+                'status' => $result['status']
+            ]
         );
     }
 }
